@@ -1,4 +1,5 @@
 import com.carscupcake.parser.DoclingTextParser;
+import com.carscupcake.parser.elements.TableElement;
 import org.junit.jupiter.api.Test;
 
 public class TestTableDoclingParsing {
@@ -13,6 +14,25 @@ public class TestTableDoclingParsing {
         assert parsed.root() == null;
         assert parsed.tables().length == 1;
         var table = parsed.tables()[0];
+        assertTable(table);
+    }
+
+    @Test
+    public void embeddedCellParsingTest() {
+        var text = """
+                <doctag>
+                <otsl><loc_0><loc_0><loc_500><loc_500><ched>Col1<ched>Col2<nl><fcel>Content11<fcel>Content12<nl><fcel>Content21<fcel>Content22<nl></otsl>
+                </doctag>
+                """;
+        var parsed = DoclingTextParser.parse(text);
+        assert parsed.root() != null;
+        assert parsed.root().elements().size() == 1;
+        assert parsed.tables().length == 1;
+        var table = parsed.tables()[0];
+        assertTable(table);
+    }
+
+    private void assertTable(TableElement table) {
         assert table.elements().length == 3;
         assertRow(table.elements()[0], "Col1", "Col2");
         assertRow(table.elements()[1], "Content11", "Content12");

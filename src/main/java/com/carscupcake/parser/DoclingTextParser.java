@@ -31,7 +31,11 @@ public class DoclingTextParser {
         tokenize(buffer, (token, s) -> {
             if (token == DocumentToken.Text) {
                 elements.add(buildTextTag(buffer));
-            } else {
+            } else if (token == DocumentToken.OTSL) {
+                var table = buildOtsl(buffer);
+                tables.add(table);
+                elements.add(table);
+            }else {
                 String skipped = "";
                 while (!skipped.endsWith(s)) {
                     buffer.seek('/');
