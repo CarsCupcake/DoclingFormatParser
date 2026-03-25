@@ -33,4 +33,9 @@ public enum TableToken implements IToken {
     public boolean isInfinite() {
         return false;
     }
+
+    @Override
+    public boolean hasLocationData() {
+        return false;
+    }
 }

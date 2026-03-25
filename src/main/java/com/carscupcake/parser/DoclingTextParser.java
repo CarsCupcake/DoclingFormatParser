@@ -5,6 +5,7 @@ import com.carscupcake.parser.elements.DoclingElement;
 import com.carscupcake.parser.elements.IgnoredElement;
 import com.carscupcake.parser.elements.TableElement;
 import com.carscupcake.parser.elements.TextElement;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -23,16 +24,17 @@ public class DoclingTextParser {
         buffer.seek('<');
         var tag = buffer.seek('>');
         if (tag != null && tag.equals(DocumentToken.OTSL.getToken())) {
-                return new DoclingDocument(null, new TableElement[] {buildOtsl(buffer)});
+                return new DoclingDocument(null, new TableElement[] {buildOtsl(buffer, null)});
         }
         if (tag == null || !tag.equals(DocumentToken.Document.getToken())) {
             throw new IllegalArgumentException("Not a valid docling string");
         }
-        tokenize(buffer, (token, s) -> {
+        tokenize(buffer, (data, s) -> {
+            var token = data.token();
             if (token == DocumentToken.Text) {
-                elements.add(buildTextTag(buffer));
+                elements.add(buildTextTag(buffer, data));
             } else if (token == DocumentToken.OTSL) {
-                var table = buildOtsl(buffer);
+                var table = buildOtsl(buffer, data);
                 tables.add(table);
                 elements.add(table);
             }else {
@@ -44,14 +46,14 @@ public class DoclingTextParser {
                         throw new IllegalArgumentException("Token " + s + " never ends!");
                     }
                 }
-                elements.add(new IgnoredElement(token));
+                elements.add(new IgnoredElement(token, data.a, data.b));
             }
         }, DocumentToken.Document, DocumentToken.values());
         var doclingElement = new DoclingElement(elements);
         return new DoclingDocument(doclingElement, tables.toArray(TableElement[]::new));
     }
 
-    private static void tokenize(TextBuffer buffer, BiConsumer<IToken, String> handle, IToken expectedEndToken, IToken... validTokens) {
+    private static void tokenize(TextBuffer buffer, BiConsumer<Metadata, String> handle, IToken expectedEndToken, IToken... validTokens) {
         boolean isFinished = false;
         while (!isFinished) {
             buffer.seek('<');
@@ -118,12 +120,28 @@ public class DoclingTextParser {
             if (token instanceof EndToken)
                 isFinished = true;
             else {
-                handle.accept(token, s);
+                Pos2d a = null;
+                Pos2d b = null;
+                if (token.hasLocationData()) {
+                    a = new Pos2d(readLoc(buffer), readLoc(buffer));
+                    b = new Pos2d(readLoc(buffer), readLoc(buffer));
+                }
+                handle.accept(new Metadata(token, a, b), s);
             }
         }
     }
 
-    private static IElement buildTextTag(TextBuffer buffer) {
+    private static int readLoc(TextBuffer buffer) {
+        buffer.seek('<');
+        var locTag = buffer.seek('>');
+        if (locTag == null) {
+            throw new IllegalArgumentException("Location tag never ends!");
+        }
+        var number = locTag.substring(DocumentToken.LocToken.getToken().length());
+        return Integer.parseInt(number);
+    }
+
+    private static IElement buildTextTag(TextBuffer buffer, Metadata data) {
         String skipped = "";
         StringBuilder text = new StringBuilder();
         while (!skipped.equals("/" + DocumentToken.Text.getToken())) {
@@ -133,14 +151,15 @@ public class DoclingTextParser {
                 throw new IllegalArgumentException("Text tag never ends!");
             }
         }
-        return new TextElement(text.toString());
+        return new TextElement(text.toString(), data.a, data.b);
     }
 
-    private static TableElement buildOtsl(TextBuffer buffer) {
+    private static TableElement buildOtsl(TextBuffer buffer, @Nullable Metadata data) {
         var header = new ArrayList<String>();
         var content = new ArrayList<ArrayList<String>>();
         content.add(new ArrayList<>());
-        tokenize(buffer, (token, s) -> {
+        tokenize(buffer, (metadata, s) -> {
+            var token = metadata.token();
             if (token == DocumentToken.LocToken) return; //TODO Add Location Information
             var builder = new StringBuilder();
             while (buffer.peek() != '<') {
@@ -166,7 +185,7 @@ public class DoclingTextParser {
         for (int i = 0; i < content.size() - 1; i++) {
             strings[i + 1] = content.get(i).toArray(String[]::new);
         }
-        return new TableElement(strings);
+        return new TableElement(strings, data == null ? null : data.a, data == null ? null : data.b);
     }
 
     private record EndToken(String original) implements IToken {
@@ -190,4 +209,6 @@ public class DoclingTextParser {
             this.item = element;
         }
     }
+
+    private record Metadata(IToken token, Pos2d a, Pos2d b){}
 }

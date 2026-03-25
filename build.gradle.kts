@@ -18,6 +18,9 @@ dependencies {
     annotationProcessor("org.jetbrains:annotations:26.0.2")
 }
 
+java.targetCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_17
+
 tasks.test {
     useJUnitPlatform()
 }

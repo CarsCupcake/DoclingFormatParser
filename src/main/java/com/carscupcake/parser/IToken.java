@@ -7,4 +7,7 @@ package com.carscupcake.parser;
 public interface IToken {
     String getToken();
     boolean isInfinite();
+    default boolean hasLocationData() {
+        return true;
+    }
 }
