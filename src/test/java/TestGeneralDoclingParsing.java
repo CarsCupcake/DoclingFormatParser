@@ -12,6 +12,7 @@ public class TestGeneralDoclingParsing {
                 <doctag>
                 <text><loc_1><loc_1><loc_11><loc_11>A Text</text>
                 <section_header_level_1><loc_11><loc_11><loc_21><loc_21>Section 1</section_header_level_1>
+                <unordered_list><list_item><loc_21><loc_21><loc_21><loc_21>Item 1</list_item></unordered_list>
                 </doctag>
                 """;
         var parsed = DoclingTextParser.parse(text);
@@ -19,7 +20,7 @@ public class TestGeneralDoclingParsing {
 
         assert root != null;
         assert root.getToken() == DocumentToken.Document;
-        assert root.elements().size() == 2;
+        assert root.elements().size() == 3;
         assert root.elements().get(0).getToken() == DocumentToken.Text;
         assertElementPos(root.elements().get(0), 1, 1, 11, 11);
         assert ((TextElement) root.elements().get(0)).value().equals("A Text");

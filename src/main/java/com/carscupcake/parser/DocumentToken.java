@@ -4,8 +4,18 @@ public enum DocumentToken implements IToken {
     Document("doctag"),
     OTSL("otsl"),
     Chart("chart"),
-    OrderedList("ordered_list"),
-    UnorderedList("unordered_list"),
+    OrderedList("ordered_list") {
+        @Override
+        public boolean hasLocationData() {
+            return false;
+        }
+    },
+    UnorderedList("unordered_list") {
+        @Override
+        public boolean hasLocationData() {
+            return false;
+        }
+    },
     PageBreak("page_break"),
     Smiles("smiles"),
     Inline("inline"),
