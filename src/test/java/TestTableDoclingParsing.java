@@ -7,7 +7,7 @@ public class TestTableDoclingParsing {
     public void basicCellParsingTest() {
         var text = """
                 <otsl>
-                <loc_0><loc_0><loc_500><loc_500><ched>Col1<ched>Col2<nl><fcel>Content11<fcel>Content12<nl><fcel>Content21<fcel>Content22<nl>
+                <loc_0><loc_0><loc_500><loc_500><ched>Col1<ched>Col2<nl><fcel>Content11<fcel>Content12<nl><fcel>Content21<fcel>Content22<nl><ecel><fcel>Empty<nl><fcel>Empty<ecel><nl>
                 </otsl>
                 """;
         var parsed = DoclingTextParser.parse(text);
@@ -21,7 +21,7 @@ public class TestTableDoclingParsing {
     public void embeddedCellParsingTest() {
         var text = """
                 <doctag>
-                <otsl><loc_0><loc_0><loc_500><loc_500><ched>Col1<ched>Col2<nl><fcel>Content11<fcel>Content12<nl><fcel>Content21<fcel>Content22<nl></otsl>
+                <otsl><loc_0><loc_0><loc_500><loc_500><ched>Col1<ched>Col2<nl><fcel>Content11<fcel>Content12<nl><fcel>Content21<fcel>Content22<nl><ecel><fcel>Empty<nl><fcel>Empty<ecel><nl></otsl>
                 </doctag>
                 """;
         var parsed = DoclingTextParser.parse(text);
@@ -33,10 +33,12 @@ public class TestTableDoclingParsing {
     }
 
     private void assertTable(TableElement table) {
-        assert table.elements().length == 3;
+        assert table.elements().length == 5;
         assertRow(table.elements()[0], "Col1", "Col2");
         assertRow(table.elements()[1], "Content11", "Content12");
         assertRow(table.elements()[2], "Content21", "Content22");
+        assertRow(table.elements()[3], "", "Empty");
+        assertRow(table.elements()[4], "Empty", "");
     }
 
     private void assertRow(String[] row, String... cells) {

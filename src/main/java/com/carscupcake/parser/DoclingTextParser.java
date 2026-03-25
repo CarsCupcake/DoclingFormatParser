@@ -157,6 +157,9 @@ public class DoclingTextParser {
             if (token == TableToken.OtslContentCell) {
                 content.get(content.size() - 1).add(builder.toString());
             }
+            if (token == TableToken.OtslEmptyCell) {
+                content.get(content.size() - 1).add("");
+            }
         }, DocumentToken.OTSL, TableToken.OTSL_TOKENS);
         var strings = new String[content.size()][];
         strings[0] = header.toArray(String[]::new);
